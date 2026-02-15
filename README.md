@@ -1,6 +1,6 @@
 # Mini-ClawBot
 
-A lightweight CLI chatbot powered by OpenAI with tool use, streaming responses, and a pluggable skills system.
+A lightweight CLI chatbot with tool use, streaming responses, and a pluggable skills system. Currently uses OpenAI-compatible APIs, extensible to any LLM provider.
 
 ## Features
 
