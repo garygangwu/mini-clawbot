@@ -1,7 +1,7 @@
 import json
 import os
 
-SESSION_DIR = os.path.join(os.path.expanduser("~"), ".mini-clawbot", "sessions")
+SESSION_DIR = os.path.join(os.path.expanduser("~"), ".autocrew", "sessions")
 DEFAULT_SESSION = os.path.join(SESSION_DIR, "default.jsonl")
 
 

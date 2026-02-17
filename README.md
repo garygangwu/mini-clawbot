@@ -1,4 +1,4 @@
-# Mini-ClawBot
+# AutoCrew
 
 A lightweight CLI chatbot with **self-organizing multi-agent teams**. Give it a complex task and it designs a team of specialized agents — custom roles, system prompts, and tools — all on the fly. Powered by OpenAI-compatible APIs.
 
@@ -145,12 +145,12 @@ Detailed instructions the model follows when this skill is activated.
 
 ## Configuration
 
-Stored at `~/.mini-clawbot/config.json`:
+Stored at `~/.autocrew/config.json`:
 
 ```json
 {
   "model": "gpt-5.2",
-  "system_prompt": "You are Mini-ClawBot, a helpful AI assistant."
+  "system_prompt": "You are AutoCrew, a helpful AI assistant."
 }
 ```
 

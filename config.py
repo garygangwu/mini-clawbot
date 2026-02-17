@@ -1,12 +1,12 @@
 import json
 import os
 
-CONFIG_DIR = os.path.join(os.path.expanduser("~"), ".mini-clawbot")
+CONFIG_DIR = os.path.join(os.path.expanduser("~"), ".autocrew")
 CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json")
 
 DEFAULTS = {
     "model": "gpt-5.2",
-    "system_prompt": "You are Mini-ClawBot, a helpful AI assistant.",
+    "system_prompt": "You are AutoCrew, a helpful AI assistant.",
 }
 
 

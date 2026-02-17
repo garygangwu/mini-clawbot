@@ -120,7 +120,7 @@ TOOL_SCHEMAS = [
             "name": "generate_video",
             "description": (
                 "Generate a video from a text prompt using OpenAI's Sora model. "
-                "The video is saved to ~/mini-clawbot-output/ and the file path is returned. "
+                "The video is saved to ~/autocrew-output/ and the file path is returned. "
                 "Generation takes 30 seconds to a few minutes. Use for creating short video clips."
             ),
             "parameters": {
@@ -234,7 +234,7 @@ def write_file(path: str, content: str) -> str:
 MAX_CONTENT_CHARS = 50000  # truncate to fit LLM context
 
 FETCH_HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) MiniClawBot/1.0",
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AutoCrew/1.0",
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
 }
 
@@ -298,7 +298,7 @@ def pdf_fetch(url: str) -> str:
     return text
 
 
-VIDEO_OUTPUT_DIR = os.path.expanduser("~/mini-clawbot-output")
+VIDEO_OUTPUT_DIR = os.path.expanduser("~/autocrew-output")
 
 # SDK accepts seconds as string literals
 VALID_SECONDS = ("4", "8", "12")

@@ -17,7 +17,7 @@ ASSIGNABLE_TOOLS = [s["function"]["name"] for s in tools.TOOL_SCHEMAS]
 # Team tools that are always given to every agent
 MANDATORY_TEAM_TOOLS = ["post_message", "read_messages", "read_artifacts"]
 
-TEAMS_DIR = os.path.join(os.path.expanduser("~"), ".mini-clawbot", "teams")
+TEAMS_DIR = os.path.join(os.path.expanduser("~"), ".autocrew", "teams")
 
 # --- Team tool schemas (not added to global tools.TOOL_SCHEMAS) ---
 

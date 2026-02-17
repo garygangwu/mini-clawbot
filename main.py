@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Mini-ClawBot: a minimal CLI chatbot powered by OpenAI."""
+"""AutoCrew: a multi-agent team CLI powered by OpenAI."""
 
 import sys
 
@@ -35,7 +35,7 @@ def print_history():
 
 
 def main():
-    print("Mini-ClawBot (type /help for commands, /quit to exit)")
+    print("AutoCrew (type /help for commands, /quit to exit)")
     print()
 
     while True:
