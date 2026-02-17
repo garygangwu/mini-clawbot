@@ -8,10 +8,14 @@ import uuid
 from openai import OpenAI
 
 import config
-import roles
 import skills
 import tools
 from agent import run_agent_loop
+
+# Tools available for assignment to agents (team tools are always added separately)
+ASSIGNABLE_TOOLS = [s["function"]["name"] for s in tools.TOOL_SCHEMAS]
+# Team tools that are always given to every agent
+MANDATORY_TEAM_TOOLS = ["post_message", "read_messages", "read_artifacts"]
 
 TEAMS_DIR = os.path.join(os.path.expanduser("~"), ".mini-clawbot", "teams")
 
@@ -187,20 +191,44 @@ class TeamRun:
     # --- Meta-orchestrator: plan the roster ---
 
     def plan_roster(self, client: OpenAI, model: str) -> list[dict]:
+        tools_list = ", ".join(ASSIGNABLE_TOOLS)
+        skill_names = [s["name"] for s in skills.list_skills()]
+        skills_section = ""
+        if skill_names:
+            skills_section = (
+                "\n\nAvailable skills (give agents 'use_skill' tool to access these):\n"
+                + ", ".join(skill_names)
+            )
+
         prompt = (
-            "You are a meta-orchestrator. Given a task and a catalog of available agent roles, "
-            "decide which agents to activate.\n\n"
+            "You are a meta-orchestrator. Given a task, design a team of specialized agents "
+            "to accomplish it. Create custom roles tailored to this specific task.\n\n"
             f"Task: {self.task}\n\n"
-            f"{roles.catalog_summary()}\n\n"
+            f"Available tools you can assign to agents: {tools_list}\n"
+            f"(Every agent automatically gets: post_message, read_messages, read_artifacts)"
+            f"{skills_section}\n\n"
             "Respond with a JSON object containing a 'roster' array. Each entry has:\n"
-            '- "role": one of the role names above\n'
-            '- "count": how many of this role (usually 1)\n'
-            '- "focus": a short description of what this agent should focus on\n\n'
+            '- "role": a short snake_case role name you invent (e.g. "haiku_poet", "fact_checker")\n'
+            '- "count": how many of this role (usually 1, max 3)\n'
+            '- "focus": what this agent should focus on\n'
+            '- "system_prompt": instructions for this agent (2-4 sentences describing its job)\n'
+            '- "tools": array of tool names from the available list above\n\n'
             "Rules:\n"
-            "- Always include exactly 1 orchestrator\n"
+            "- Always include exactly 1 orchestrator role with tools: [] "
+            "(it only needs the automatic team tools + declare_done)\n"
+            "- The orchestrator coordinates and calls declare_done when finished\n"
             "- Total agents must be at most 6\n"
-            "- Only include roles that are needed for this task\n"
-            '- Return ONLY valid JSON like: {"roster": [{"role": "orchestrator", "count": 1, "focus": "..."}]}'
+            "- Only create roles that are needed for this task\n"
+            "- Keep system_prompts concise and task-specific\n\n"
+            "Example:\n"
+            '{"roster": [\n'
+            '  {"role": "orchestrator", "count": 1, "focus": "Coordinate and finalize",\n'
+            '   "system_prompt": "You coordinate the team. Delegate work, review progress, call declare_done when complete.",\n'
+            '   "tools": []},\n'
+            '  {"role": "haiku_poet", "count": 1, "focus": "Write haiku about recursion",\n'
+            '   "system_prompt": "You are a poet. Write haiku in strict 5-7-5 syllable form. Post your drafts to the message board.",\n'
+            '   "tools": ["write_file"]}\n'
+            "]}"
         )
 
         print(f"\n[team] Planning roster for: {self.task}", flush=True)
@@ -214,28 +242,53 @@ class TeamRun:
         data = json.loads(raw)
         roster_spec = data.get("roster", [])
 
+        # Build the valid tool name set for validation
+        valid_tools = set(ASSIGNABLE_TOOLS) | TEAM_TOOL_NAMES
+
         # Expand into individual agents
         agents = []
         role_counts: dict[str, int] = {}
         for entry in roster_spec:
             role_name = entry["role"]
-            count = min(entry.get("count", 1), 3)  # cap per-role
+            count = min(entry.get("count", 1), 3)
             focus = entry.get("focus", "")
+            system_prompt = entry.get("system_prompt", f"You are a {role_name} agent.")
+            # Validate and filter tools
+            agent_tools = [t for t in entry.get("tools", []) if t in valid_tools]
+            # Add mandatory team tools
+            for t in MANDATORY_TEAM_TOOLS:
+                if t not in agent_tools:
+                    agent_tools.append(t)
+            # Orchestrator always gets declare_done
+            if role_name == "orchestrator" and "declare_done" not in agent_tools:
+                agent_tools.append("declare_done")
+
             for _ in range(count):
                 role_counts[role_name] = role_counts.get(role_name, 0) + 1
                 agent_id = f"{role_name}_{role_counts[role_name]}"
-                agents.append({"role": role_name, "agent_id": agent_id, "focus": focus})
+                agents.append({
+                    "role": role_name,
+                    "agent_id": agent_id,
+                    "focus": focus,
+                    "system_prompt": system_prompt,
+                    "allowed_tools": agent_tools,
+                })
 
-        # Enforce constraints: cap at 6, ensure exactly 1 orchestrator
+        # Enforce constraints: ensure exactly 1 orchestrator
         has_orchestrator = any(a["role"] == "orchestrator" for a in agents)
         if not has_orchestrator:
             agents.insert(0, {
                 "role": "orchestrator",
                 "agent_id": "orchestrator_1",
                 "focus": "Coordinate the team and declare done when finished",
+                "system_prompt": (
+                    "You coordinate the team. Delegate work to other agents, "
+                    "review progress, and call declare_done when complete."
+                ),
+                "allowed_tools": MANDATORY_TEAM_TOOLS + ["declare_done"],
             })
 
-        # Remove extra orchestrators
+        # Remove extra orchestrators, cap at 6
         orch_count = 0
         filtered = []
         for a in agents:
@@ -250,15 +303,18 @@ class TeamRun:
 
         print(f"[team] Roster ({len(agents)} agents):", flush=True)
         for a in agents:
-            print(f"  - {a['agent_id']}: {a['focus']}", flush=True)
+            agent_tools_str = ", ".join(
+                t for t in a["allowed_tools"] if t not in MANDATORY_TEAM_TOOLS
+            )
+            print(f"  - {a['agent_id']}: {a['focus']} [tools: {agent_tools_str}]", flush=True)
 
         return agents
 
     # --- Build tools for an agent ---
 
-    def build_agent_tools(self, agent_id: str, role_def: dict) -> tuple[list[dict], dict]:
+    def build_agent_tools(self, agent_id: str, agent_entry: dict) -> tuple[list[dict], dict]:
         """Return (tool_schemas, handler_overrides) for one agent turn."""
-        allowed = set(role_def["allowed_tools"])
+        allowed = set(agent_entry["allowed_tools"])
 
         # Filter global tool schemas
         schemas = [s for s in tools.TOOL_SCHEMAS if s["function"]["name"] in allowed]
@@ -287,12 +343,12 @@ class TeamRun:
 
     # --- Build system prompt for an agent ---
 
-    def build_system_prompt(self, agent_entry: dict, role_def: dict) -> str:
+    def build_system_prompt(self, agent_entry: dict) -> str:
         roster_text = "\n".join(
             f"- {a['agent_id']} ({a['role']}): {a['focus']}" for a in self.roster
         )
         prompt = (
-            f"{role_def['system_prompt']}\n\n"
+            f"{agent_entry['system_prompt']}\n\n"
             f"You are {agent_entry['agent_id']} (role: {agent_entry['role']}).\n"
             f"Your focus: {agent_entry['focus']}\n\n"
             f"Team roster:\n{roster_text}\n\n"
@@ -304,7 +360,7 @@ class TeamRun:
         )
 
         # Add skill info if agent has use_skill
-        if "use_skill" in role_def["allowed_tools"]:
+        if "use_skill" in agent_entry["allowed_tools"]:
             skill_list = skills.list_skills()
             if skill_list:
                 lines = ["\n\n## Available Skills\n"]
@@ -379,17 +435,13 @@ class TeamRun:
             if not agent_entry:
                 break
 
-            role_def = roles.get_role(agent_entry["role"])
-            if not role_def:
-                break
-
             print(f"\n{'='*60}", flush=True)
             print(f"  TURN {turn_count}/{max_turns} — {next_agent}", flush=True)
             print(f"  remaining agents: {self._pending_agents}", flush=True)
             print(f"{'='*60}", flush=True)
 
             # Build tools and handlers
-            schemas, handler_overrides = self.build_agent_tools(next_agent, role_def)
+            schemas, handler_overrides = self.build_agent_tools(next_agent, agent_entry)
 
             # Temporarily inject team handlers
             original_handlers = {}
@@ -399,7 +451,7 @@ class TeamRun:
 
             try:
                 # Build messages
-                system_prompt = self.build_system_prompt(agent_entry, role_def)
+                system_prompt = self.build_system_prompt(agent_entry)
                 history = self.agent_histories.get(next_agent, [])
 
                 board_snapshot = self.read_messages(next_agent, last_n=20)
