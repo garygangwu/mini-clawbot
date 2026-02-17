@@ -1,6 +1,6 @@
 # AutoCrew
 
-A lightweight CLI chatbot with **self-organizing multi-agent teams**. Give it a complex task and it designs a team of specialized agents — custom roles, system prompts, and tools — all on the fly. Powered by OpenAI-compatible APIs.
+A lightweight CLI chatbot with **self-organizing multi-agent teams**. Give it a complex task and it designs a team of specialized agents — custom roles, system prompts, and tools — all on the fly. 
 
 ## Highlights
 
