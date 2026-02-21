@@ -4,7 +4,7 @@ description: Summarize or extract text/transcripts from URLs, podcasts, and loca
 homepage: https://summarize.sh
 metadata:
   {
-    "opencrew":
+    "autocrew":
       {
         "emoji": "🧾",
         "requires": { "bins": ["summarize"] },

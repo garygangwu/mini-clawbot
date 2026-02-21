@@ -2,20 +2,20 @@
 name: tmux
 description: Remote-control tmux sessions for interactive CLIs by sending keystrokes and scraping pane output.
 metadata:
-  { "opencrew": { "emoji": "🧵", "os": ["darwin", "linux"], "requires": { "bins": ["tmux"] } } }
+  { "autocrew": { "emoji": "🧵", "os": ["darwin", "linux"], "requires": { "bins": ["tmux"] } } }
 ---
 
-# tmux Skill (OpenCrew)
+# tmux Skill (AutoCrew)
 
 Use tmux only when you need an interactive TTY. Prefer exec background mode for long-running, non-interactive tasks.
 
 ## Quickstart (isolated socket, exec tool)
 
 ```bash
-SOCKET_DIR="${OPENCREW_TMUX_SOCKET_DIR:-${CLAWDBOT_TMUX_SOCKET_DIR:-${TMPDIR:-/tmp}/opencrew-tmux-sockets}}"
+SOCKET_DIR="${AUTOCREW_TMUX_SOCKET_DIR:-${CLAWDBOT_TMUX_SOCKET_DIR:-${TMPDIR:-/tmp}/autocrew-tmux-sockets}}"
 mkdir -p "$SOCKET_DIR"
-SOCKET="$SOCKET_DIR/opencrew.sock"
-SESSION=opencrew-python
+SOCKET="$SOCKET_DIR/autocrew.sock"
+SESSION=autocrew-python
 
 tmux -S "$SOCKET" new -d -s "$SESSION" -n shell
 tmux -S "$SOCKET" send-keys -t "$SESSION":0.0 -- 'PYTHON_BASIC_REPL=1 python3 -q' Enter
@@ -32,8 +32,8 @@ To monitor:
 
 ## Socket convention
 
-- Use `OPENCREW_TMUX_SOCKET_DIR` (legacy `CLAWDBOT_TMUX_SOCKET_DIR` also supported).
-- Default socket path: `"$OPENCREW_TMUX_SOCKET_DIR/opencrew.sock"`.
+- Use `AUTOCREW_TMUX_SOCKET_DIR` (legacy `CLAWDBOT_TMUX_SOCKET_DIR` also supported).
+- Default socket path: `"$AUTOCREW_TMUX_SOCKET_DIR/autocrew.sock"`.
 
 ## Targeting panes and naming
 
@@ -44,7 +44,7 @@ To monitor:
 ## Finding sessions
 
 - List sessions on your socket: `{baseDir}/scripts/find-sessions.sh -S "$SOCKET"`.
-- Scan all sockets: `{baseDir}/scripts/find-sessions.sh --all` (uses `OPENCREW_TMUX_SOCKET_DIR`).
+- Scan all sockets: `{baseDir}/scripts/find-sessions.sh --all` (uses `AUTOCREW_TMUX_SOCKET_DIR`).
 
 ## Sending input safely
 

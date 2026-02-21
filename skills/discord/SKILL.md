@@ -1,14 +1,14 @@
 ---
 name: discord
-description: Use when you need to control Discord from OpenCrew via the discord tool: send messages, react, post or upload stickers, upload emojis, run polls, manage threads/pins/search, create/edit/delete channels and categories, fetch permissions or member/role/channel info, set bot presence/activity, or handle moderation actions in Discord DMs or channels.
-metadata: {"opencrew":{"emoji":"🎮","requires":{"config":["channels.discord"]}}}
+description: Use when you need to control Discord from AutoCrew via the discord tool: send messages, react, post or upload stickers, upload emojis, run polls, manage threads/pins/search, create/edit/delete channels and categories, fetch permissions or member/role/channel info, set bot presence/activity, or handle moderation actions in Discord DMs or channels.
+metadata: {"autocrew":{"emoji":"🎮","requires":{"config":["channels.discord"]}}}
 ---
 
 # Discord Actions
 
 ## Overview
 
-Use `discord` to manage messages, reactions, threads, polls, and moderation. You can disable groups via `discord.actions.*` (defaults to enabled, except roles/moderation). The tool uses the bot token configured for OpenCrew.
+Use `discord` to manage messages, reactions, threads, polls, and moderation. You can disable groups via `discord.actions.*` (defaults to enabled, except roles/moderation). The tool uses the bot token configured for AutoCrew.
 
 ## Inputs to collect
 
@@ -85,7 +85,7 @@ Message context lines include `discord message id` and `channel` fields you can 
   "action": "stickerUpload",
   "guildId": "999",
   "name": "openclaw_wave",
-  "description": "OpenCrew waving hello",
+  "description": "AutoCrew waving hello",
   "tags": "👋",
   "mediaUrl": "file:///tmp/wave.png"
 }
@@ -175,7 +175,7 @@ Use `discord.actions.*` to disable action groups:
 {
   "action": "sendMessage",
   "to": "channel:123",
-  "content": "Hello from OpenCrew"
+  "content": "Hello from AutoCrew"
 }
 ```
 

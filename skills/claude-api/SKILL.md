@@ -7,7 +7,7 @@ description: Call the Anthropic Claude API directly for text generation, second 
   (4) you want a second opinion from a different model.
 metadata:
   {
-    "opencrew":
+    "autocrew":
       {
         "emoji": "🟣",
         "requires": { "bins": ["python3"], "env": ["ANTHROPIC_API_KEY"] },
